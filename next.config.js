@@ -23,6 +23,15 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  trailingSlash: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'unsplash.com',
+      },
+    ],
+  },
 };
 
 module.exports = withPWA(nextConfig);

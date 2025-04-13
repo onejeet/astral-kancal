@@ -55,7 +55,10 @@
   "lint-staged": {
     "src/**/*": [
       "npm run prettier:format",
-      "npm run eslint:format"
+      "npm run lint:format"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
     ]
   }
 }
