@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -12,12 +11,13 @@ import {
 } from '@dnd-kit/core';
 import { ArrowLeftCircle, ArrowRightCircle } from 'lucide-react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 
 import mockEvents from '@/lib/mockData';
 import { Event, EventsByDate } from '@/types';
 import EventCard from '@/components/common/EventCard';
 import EventDetailModal from '@/components/common/EventDetailDialog';
+import WeekView from '@/components/common/WeekView';
 
 const DroppableDay = React.memo(function DroppableDay({
   children,
@@ -110,6 +110,28 @@ const transitionConfig = {
   duration: 0.6,
 };
 
+const eventCardInitialConfig = {
+  opacity: 0,
+  y: 20,
+};
+
+const eventCardAnimateConfig = {
+  opacity: 1,
+  y: 0,
+};
+
+const eventCardExitConfig = {
+  opacity: 0,
+  y: -20,
+};
+
+const eventCardTransitionConfig = {
+  type: 'tween',
+  ease: 'easeInOut',
+  duration: 0.6,
+  //duration: 0.2,
+};
+
 const dragOverlayInitialConfig = {
   scale: 1,
   rotate: 0,
@@ -132,7 +154,7 @@ const headerAnimateConfig = {
 export default function KanCal() {
   const [events, setEvents] = useState<EventsByDate>(mockEvents);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [dateScrollInterval, setDateScrollInterval] = useState<ReturnType<
@@ -151,9 +173,8 @@ export default function KanCal() {
 
       const interval = setInterval(() => {
         setSelectedDate((current) => {
-          const newDate = dayjs(current)
-            .add(direction === 'next' ? 1 : -1, 'day')
-            .toDate();
+          const newDate = dayjs(current).add(direction === 'next' ? 1 : -1, 'day');
+
           return newDate;
         });
       }, 1500);
@@ -258,6 +279,17 @@ export default function KanCal() {
     }, 200);
   }, []);
 
+  const handleDateChange = useCallback(
+    (newDate: Dayjs) => {
+      const currentDate = dayjs(selectedDate);
+      const nextDate = dayjs(newDate);
+
+      setDateTransitionDirection(nextDate.isAfter(currentDate) ? 'right' : 'left');
+      setSelectedDate(newDate);
+    },
+    [selectedDate]
+  );
+
   const currentDate = useMemo(() => dayjs(selectedDate).format('YYYY-MM-DD'), [selectedDate]);
 
   const currentDateEvents = useMemo(() => events[currentDate] || [], [events, currentDate]);
@@ -297,9 +329,18 @@ export default function KanCal() {
     [dateTransitionDirection]
   );
 
+  // const headerExitConfig = useMemo(
+  //   () => ({
+  //     opacity: 0,
+  //     x: dateTransitionDirection === 'left' ? 20 : -20,
+  //   }),
+  //   [dateTransitionDirection]
+  // );
+
   return (
     <LayoutGroup>
       <div className="min-h-screen bg-gray-50">
+        <WeekView selectedDate={selectedDate} onDateSelect={handleDateChange} />
         <motion.div
           className="calendar-container relative max-w-2xl mx-auto px-4 py-6"
           initial={initialMotionConfig}
@@ -336,17 +377,39 @@ export default function KanCal() {
             transition={transitionConfig}
           >
             <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-bold">{formattedDate}</h2>
+              <h2 className="text-2xl font-semibold">{formattedDate}</h2>
               <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"></div>
             </div>
           </motion.h2>
 
           <DndContext {...dndContextProps}>
-            <motion.div layout key={currentDate}>
+            <motion.div
+              layout
+              key={currentDate}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={(event, info) => {
+                if (info.offset.x > 100) {
+                  handleDateChange(dayjs(selectedDate).subtract(1, 'day'));
+                } else if (info.offset.x < -100) {
+                  handleDateChange(dayjs(selectedDate).add(1, 'day'));
+                }
+              }}
+              // initial={headerInitialConfig}
+              // animate={headerAnimateConfig}
+              // exit={headerExitConfig}
+              // transition={transitionConfig}
+            >
               <DroppableDay date={currentDate} isActive={!!draggedEvent}>
                 <AnimatePresence mode="wait">
                   {currentDateEvents.map((event) => (
-                    <motion.div key={event.id}>
+                    <motion.div
+                      key={event.id}
+                      initial={eventCardInitialConfig}
+                      animate={eventCardAnimateConfig}
+                      exit={eventCardExitConfig}
+                      transition={eventCardTransitionConfig}
+                    >
                       <EventCard event={event} onClick={() => handleCardClick(event)} />
                     </motion.div>
                   ))}
@@ -355,7 +418,7 @@ export default function KanCal() {
                       initial={arrowInitialConfig}
                       animate={calendarAnimateConfig}
                       exit={arrowInitialConfig}
-                      className="text-center text-gray-500 py-8"
+                      className="text-center text-gray-500 py-8 min-h-200"
                     >
                       No events scheduled for this day
                     </motion.p>
@@ -379,9 +442,11 @@ export default function KanCal() {
           </DndContext>
         </motion.div>
 
-        {selectedEvent && (
-          <EventDetailModal isOpen={isModalOpen} event={selectedEvent} onClose={closeModal} />
-        )}
+        <AnimatePresence>
+          {selectedEvent && (
+            <EventDetailModal isOpen={isModalOpen} event={selectedEvent} onClose={closeModal} />
+          )}
+        </AnimatePresence>
       </div>
     </LayoutGroup>
   );
