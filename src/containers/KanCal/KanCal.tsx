@@ -329,14 +329,6 @@ export default function KanCal() {
     [dateTransitionDirection]
   );
 
-  // const headerExitConfig = useMemo(
-  //   () => ({
-  //     opacity: 0,
-  //     x: dateTransitionDirection === 'left' ? 20 : -20,
-  //   }),
-  //   [dateTransitionDirection]
-  // );
-
   return (
     <LayoutGroup>
       <div className="min-h-screen bg-gray-50">
