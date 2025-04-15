@@ -1,33 +1,30 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { EventCardProps } from './EventCard.types';
 
-const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
+const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: event.id,
   });
 
+  // Simple touch tracking to prevent click after drag
   const touchMoved = React.useRef(false);
 
+  // Set opacity to 0.5 for better visibility during dragging
   const style = React.useMemo(
     () => ({
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging && isMounted ? 0.5 : 1,
+      opacity: isDragging ? 0.5 : 1,
     }),
-    [isDragging, transform, transition, isMounted]
+    [isDragging, transform, transition]
   );
 
+  // Simple handlers for touch events
   const handleTouchStart = () => {
     touchMoved.current = false;
   };
@@ -59,9 +56,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
       <motion.div
         style={style}
         className="bg-white rounded-2xl shadow-sm cursor-pointer overflow-hidden group"
-        layoutId={`card-${event.id}`}
+        layoutId={disableLayoutId ? undefined : `card-${event.id}`}
       >
-        <motion.div className="relative aspect-[16/9]" layoutId={`image-container-${event.id}`}>
+        <motion.div
+          className="relative aspect-[16/9]"
+          layoutId={disableLayoutId ? undefined : `image-container-${event.id}`}
+        >
           <motion.img
             src={event.imageUrl}
             alt={event.title}
