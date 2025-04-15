@@ -18,6 +18,7 @@ import { Event, EventsByDate } from '@/types';
 import EventCard from '@/components/common/EventCard';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import WeekView from '@/components/common/WeekView';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const DroppableDay = React.memo(function DroppableDay({
   children,
@@ -164,6 +165,8 @@ export default function KanCal() {
   const [dateTransitionDirection, setDateTransitionDirection] = useState<'left' | 'right' | null>(
     null
   );
+
+  const isMobile = useIsMobile();
 
   const startDateScroll = useCallback(
     (direction: 'prev' | 'next') => {
@@ -333,60 +336,61 @@ export default function KanCal() {
     <LayoutGroup>
       <div className="min-h-screen bg-gray-50">
         <WeekView selectedDate={selectedDate} onDateSelect={handleDateChange} />
-        <motion.div
-          className="calendar-container relative max-w-2xl mx-auto px-4 py-6"
-          initial={initialMotionConfig}
-          animate={calendarAnimateConfig}
-          transition={calendarTransitionConfig}
-        >
-          {draggedEvent && (
-            <>
-              <motion.div
-                className="pointer-events-none fixed top-1/2 left-8 z-50"
-                initial={arrowInitialConfig}
-                animate={leftArrowAnimateConfig}
-                transition={arrowTransitionConfig}
-              >
-                <ArrowLeftCircle className="w-8 h-8 text-indigo-600" />
-              </motion.div>
-              <motion.div
-                className="pointer-events-none fixed top-1/2 right-8 z-50"
-                initial={arrowInitialConfig}
-                animate={rightArrowAnimateConfig}
-                transition={arrowTransitionConfig}
-              >
-                <ArrowRightCircle className="w-8 h-8 text-indigo-600" />
-              </motion.div>
-            </>
-          )}
-
-          <motion.h2
-            className="text-2xl font-bold text-gray-900 mb-4"
-            key={selectedDate.toISOString()}
-            initial={headerInitialConfig}
-            animate={headerAnimateConfig}
-            //  exit={headerExitConfig}
-            transition={transitionConfig}
+        <DndContext {...dndContextProps}>
+          <motion.div
+            className="calendar-container relative max-w-2xl mx-auto px-4 py-6"
+            initial={initialMotionConfig}
+            animate={calendarAnimateConfig}
+            transition={calendarTransitionConfig}
+            drag={isMobile ? 'x' : undefined}
+            dragConstraints={{ left: 0, right: 0 }}
+            onDragEnd={(event, info) => {
+              if (info.offset.x > 100) {
+                handleDateChange(dayjs(selectedDate).subtract(1, 'day'));
+              } else if (info.offset.x < -100) {
+                handleDateChange(dayjs(selectedDate).add(1, 'day'));
+              }
+            }}
           >
-            <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-semibold">{formattedDate}</h2>
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"></div>
-            </div>
-          </motion.h2>
+            {draggedEvent && (
+              <>
+                <motion.div
+                  className="pointer-events-none fixed top-1/2 left-8 z-50"
+                  initial={arrowInitialConfig}
+                  animate={leftArrowAnimateConfig}
+                  transition={arrowTransitionConfig}
+                >
+                  <ArrowLeftCircle className="w-8 h-8 text-indigo-600" />
+                </motion.div>
+                <motion.div
+                  className="pointer-events-none fixed top-1/2 right-8 z-50"
+                  initial={arrowInitialConfig}
+                  animate={rightArrowAnimateConfig}
+                  transition={arrowTransitionConfig}
+                >
+                  <ArrowRightCircle className="w-8 h-8 text-indigo-600" />
+                </motion.div>
+              </>
+            )}
 
-          <DndContext {...dndContextProps}>
+            <motion.h2
+              className="text-2xl font-bold text-gray-900 mb-4"
+              key={selectedDate.toISOString()}
+              initial={headerInitialConfig}
+              animate={headerAnimateConfig}
+              //  exit={headerExitConfig}
+              transition={transitionConfig}
+            >
+              <div className="flex items-center space-x-4">
+                <h2 className="text-2xl font-semibold">{formattedDate}</h2>
+                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"></div>
+              </div>
+            </motion.h2>
+
             <motion.div
               layout
               key={currentDate}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={(event, info) => {
-                if (info.offset.x > 100) {
-                  handleDateChange(dayjs(selectedDate).subtract(1, 'day'));
-                } else if (info.offset.x < -100) {
-                  handleDateChange(dayjs(selectedDate).add(1, 'day'));
-                }
-              }}
+
               // initial={headerInitialConfig}
               // animate={headerAnimateConfig}
               // exit={headerExitConfig}
@@ -431,8 +435,8 @@ export default function KanCal() {
                 </motion.div>
               ) : null}
             </DragOverlay>
-          </DndContext>
-        </motion.div>
+          </motion.div>
+        </DndContext>
 
         <AnimatePresence>
           {selectedEvent && (
