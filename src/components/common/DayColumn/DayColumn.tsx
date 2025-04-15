@@ -1,26 +1,30 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, RefObject } from 'react';
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  DragOverEvent,
   useDroppable,
   useSensors,
   useSensor,
   PointerSensor,
   TouchSensor,
   DragMoveEvent,
+  useDraggable,
+  useDndContext,
 } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
-import mockEvents from '@/lib/mockData';
+import mockEvents, { formatDate } from '@/lib/mockData';
 import { Event, EventsByDate } from '@/types';
 import EventCard from '@/components/common/EventCard';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { SortableContext } from '@dnd-kit/sortable';
+import { SortableContext, useSortable } from '@dnd-kit/sortable';
 
 interface DayColumnProps {
   selectedDate: Dayjs;
@@ -75,6 +79,8 @@ const DroppableDay = React.memo(function DroppableDay({
 }) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const { setNodeRef, isOver } = useDroppable({ id: date });
+  const { active } = useDndContext();
+  const isSameSpot = active?.data?.current?.sortable?.containerId === `Sortable-${date}`;
 
   const backgroundStyle = useMemo(
     () => ({
@@ -123,8 +129,8 @@ const DroppableDay = React.memo(function DroppableDay({
       animate={animateConfig}
       transition={transitionConfig}
     >
-      {isActive && (
-        <div className="inset-x-0 top-0 h-20 mb-10 bg-indigo-100/60 rounded-2xl pointer-events-none z-0" />
+      {isActive && !isSameSpot && (
+        <div className="inset-x-0 top-0 h-20 mb-10 bg-indigo-100/60 rounded-2xl  z-0" />
       )}
 
       {/* Actual content */}
@@ -204,25 +210,19 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
 
       const { active, over } = event;
 
-      // Reset drag state
-      setDraggedEvent(null);
-
       // If there's no drop target, just clean up and return
-      console.log('ZZ: updatedEvents 1', over);
-      if (!over) return;
 
       const fromDate = Object.keys(events).find((date) =>
         events[date]?.some((e) => e.id === active.id)
       );
+      // Reset drag state
+      setDraggedEvent(null);
 
+      if (!over) return;
       // Check if the drop target is a valid day
-      const toDateId = over.id as string;
-
-      // Extract the date from the droppable ID
-      const toDate = toDateId.replace('droppable-day-', '');
-
+      const toDate = over.id as string;
       // If source and destination are the same, no need to update
-      if (!fromDate || fromDate === toDate || !dayjs(toDate)?.isValid()) return;
+      if (!fromDate || active.id === over?.id) return;
 
       // Find the event being dragged
       const draggedEvent = events[fromDate]?.find((e) => e.id === active.id);
@@ -304,9 +304,15 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
     }, 200);
   }, []);
 
-  const handleDateChange = useCallback((newDate: Dayjs) => {
-    setSelectedDate(newDate);
-  }, []);
+  const handleDateChange = useCallback(
+    (newDate: Dayjs) => {
+      const currentDate = dayjs(selectedDate);
+      const nextDate = dayjs(newDate);
+
+      setSelectedDate(newDate);
+    },
+    [selectedDate, setSelectedDate]
+  );
 
   const currentDate = useMemo(() => dayjs(selectedDate).format('YYYY-MM-DD'), [selectedDate]);
 
@@ -374,6 +380,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
             <DroppableDay date={currentDate} isActive={!!draggedEvent}>
               {/* <AnimatePresence mode="sync"> */}
               <SortableContext
+                id={`Sortable-${currentDate}`}
                 items={currentDateEvents.map((e) => e.id)}
                 // strategy={horizontalListSortingStrategy}
               >
