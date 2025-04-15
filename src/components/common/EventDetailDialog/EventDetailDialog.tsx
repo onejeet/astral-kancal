@@ -3,6 +3,7 @@ import { Dialog } from '@headlessui/react';
 import { Event } from '@/types';
 import { motion } from 'framer-motion';
 import Button from '@/components/core/Button';
+import { CircleX } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -68,7 +69,12 @@ export default function EventDetailModal({ isOpen, onClose, event }: Props) {
                 >
                   {event.description}
                 </motion.p>
-                <Button title="Close" onClick={onClose} containerClassName="mt-8" />
+                <Button
+                  title="Close"
+                  onClick={onClose}
+                  containerClassName="mt-8"
+                  startIcon={<CircleX size={16} />}
+                />
               </motion.div>
             </motion.div>
           </Dialog.Panel>

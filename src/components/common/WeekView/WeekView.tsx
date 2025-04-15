@@ -3,8 +3,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useState } from 'react';
-import Button from '@/components/core/Button';
 import { RefreshCcw } from 'lucide-react';
+import Button from '@/components/core/Button';
 
 interface WeekViewProps {
   selectedDate: Dayjs;
@@ -75,7 +75,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-b-3xl  sticky top-0 z-10">
+    <div className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-b-3xl sticky top-0 z-10">
       <div className="flex justify-between items-center mb-3 h-9">
         <h1 className="text-2xl font-semibold text-white mb-0">Your Schedule</h1>
         {!isTodaySelected && (
