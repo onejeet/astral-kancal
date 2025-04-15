@@ -101,9 +101,9 @@ const DroppableDay = React.memo(function DroppableDay({
       const itemX = transform.x;
       const itemY = transform.y;
 
-      const isInside =
-        itemX >= 0 && itemX <= containerRect.width && itemY >= 0 && itemY <= containerRect.height;
-
+      // const isInside =
+      //   itemX >= 0 && itemX <= containerRect.width && itemY >= 0 && itemY <= containerRect.height;
+      const isInside = itemX <= containerRect.left + 10 && itemY >= containerRect.top + 10;
       setIsInsideContainer(isInside);
 
       // Calculate how other cards should shift if the draggable item is inside the container
@@ -180,15 +180,14 @@ const DroppableDay = React.memo(function DroppableDay({
         {cardsOffset && isInsideContainer && (
           <motion.div
             style={{
-              position: 'absolute',
+              position: 'relative',
               top: `${cardsOffset.top}px`,
               left: `${cardsOffset.left}px`,
               zIndex: 2,
             }}
             className="bg-indigo-300 rounded-xl p-4"
           >
-            {/* Placeholder for the drop space */}
-            Droppable Area
+            Drop here
           </motion.div>
         )}
 
