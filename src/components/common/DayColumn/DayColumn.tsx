@@ -1,20 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { useState, useCallback, useMemo, RefObject } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  DragOverEvent,
   useDroppable,
   useSensors,
   useSensor,
   PointerSensor,
   TouchSensor,
   DragMoveEvent,
-  useDraggable,
 } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
@@ -23,7 +20,7 @@ import { Event, EventsByDate } from '@/types';
 import EventCard from '@/components/common/EventCard';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { SortableContext, useSortable } from '@dnd-kit/sortable';
+import { SortableContext } from '@dnd-kit/sortable';
 
 interface DayColumnProps {
   selectedDate: Dayjs;
@@ -79,45 +76,6 @@ const DroppableDay = React.memo(function DroppableDay({
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const { setNodeRef, isOver } = useDroppable({ id: date });
 
-  // Make the item draggable
-  const {
-    setNodeRef: setDragRef,
-    listeners,
-    isDragging,
-    transform, // The position of the dragged item
-  } = useDraggable({
-    id: date,
-  });
-
-  // Track if the item is inside the container
-  const [isInsideContainer, setIsInsideContainer] = useState(false);
-  const [cardsOffset, setCardsOffset] = useState<{ top: number; left: number } | null>(null);
-
-  React.useEffect(() => {
-    if (transform && containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-
-      // Compare the draggable item's position with container's bounds
-      const itemX = transform.x;
-      const itemY = transform.y;
-
-      // const isInside =
-      //   itemX >= 0 && itemX <= containerRect.width && itemY >= 0 && itemY <= containerRect.height;
-      const isInside = itemX <= containerRect.left + 10 && itemY >= containerRect.top + 10;
-      setIsInsideContainer(isInside);
-
-      // Calculate how other cards should shift if the draggable item is inside the container
-      if (isInside) {
-        // Calculate droppable offset dynamically
-        const droppableOffset = {
-          top: itemY + 20, // Example offset for where the card is positioned
-          left: itemX,
-        };
-        setCardsOffset(droppableOffset);
-      }
-    }
-  }, [transform]);
-
   const backgroundStyle = useMemo(
     () => ({
       background: isOver
@@ -156,7 +114,6 @@ const DroppableDay = React.memo(function DroppableDay({
     <motion.div
       ref={(node) => {
         setNodeRef(node); // Droppable reference
-        setDragRef(node); // Draggable reference
         containerRef.current = node; // Store the container reference
       }}
       className="relative min-h-[200px] rounded-2xl p-4 transition-colors"
@@ -166,33 +123,12 @@ const DroppableDay = React.memo(function DroppableDay({
       animate={animateConfig}
       transition={transitionConfig}
     >
-      {/* Droppable hit area */}
-      <div {...listeners} className="absolute inset-0 z-0" />
-
-      {/* Optional: drop space indicator */}
-      {isOver && (
-        <div className="inset-x-0 top-0 h-100 bg-indigo-100/60 rounded-t-2xl pointer-events-none z-0" />
+      {isActive && (
+        <div className="inset-x-0 top-0 h-20 mb-10 bg-indigo-100/60 rounded-2xl pointer-events-none z-0" />
       )}
 
       {/* Actual content */}
-      <div className="relative z-1 space-y-4">
-        {/* Dynamically shifting the cards below */}
-        {cardsOffset && isInsideContainer && (
-          <motion.div
-            style={{
-              position: 'relative',
-              top: `${cardsOffset.top}px`,
-              left: `${cardsOffset.left}px`,
-              zIndex: 2,
-            }}
-            className="bg-indigo-300 rounded-xl p-4"
-          >
-            Drop here
-          </motion.div>
-        )}
-
-        {children}
-      </div>
+      <div className="relative z-1 space-y-4">{children}</div>
     </motion.div>
   );
 });
@@ -254,7 +190,6 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       const foundEvent = Object.values(events)
         .flat()
         .find((e) => e.id === eventId);
-      console.log('ZZ: handleDragStart', foundEvent);
       if (foundEvent) {
         setDraggedEvent(foundEvent);
       }
@@ -369,15 +304,9 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
     }, 200);
   }, []);
 
-  const handleDateChange = useCallback(
-    (newDate: Dayjs) => {
-      const currentDate = dayjs(selectedDate);
-      const nextDate = dayjs(newDate);
-
-      setSelectedDate(newDate);
-    },
-    [selectedDate, setSelectedDate]
-  );
+  const handleDateChange = useCallback((newDate: Dayjs) => {
+    setSelectedDate(newDate);
+  }, []);
 
   const currentDate = useMemo(() => dayjs(selectedDate).format('YYYY-MM-DD'), [selectedDate]);
 
