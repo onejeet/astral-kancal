@@ -75,8 +75,8 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-b-3xl sticky top-0 z-10">
-      <div className="flex justify-between items-center mb-3 h-9">
+    <div className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 py-4 sm:py-5 md:py-6 rounded-b-3xl sticky top-0 z-10">
+      <div className="flex justify-between items-center mb-3 h-9 px-4 sm:px-5 md:px-6">
         <h1 className="text-2xl font-semibold text-white mb-0">Your Schedule</h1>
         {!isTodaySelected && (
           <Button
@@ -97,7 +97,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
               animate="center"
               exit="exit"
               transition={transitionConfig}
-              className="flex justify-center items-center gap-4"
+              className="flex justify-center items-center gap-0.5 sm:gap-4"
             >
               {weekDays.map((date) => {
                 const isSelected = dayjs(date).isSame(localSelectedDate, 'day');
@@ -107,7 +107,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
                   <motion.button
                     key={date.toISOString()}
                     onClick={() => handleSwipe(date)}
-                    className={`flex flex-col items-center p-3 my-2 rounded-xl transition-all cursor-pointer flex-1 min-w-[60px] sm:min-w-[70px] md:min-w-[80px] ${
+                    className={`flex flex-col items-center p-1.5 xs:p-2 sm:p-2.5 md:p-3 my-2 rounded-xl transition-all cursor-pointer flex-1 min-w-[60px] sm:min-w-[70px] md:min-w-[80px] ${
                       isSelected
                         ? 'bg-gradient-to-br from-indigo-900 to-purple-600 text-white'
                         : 'text-white/90 hover:bg-white/10'

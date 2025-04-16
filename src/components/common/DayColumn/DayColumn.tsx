@@ -139,6 +139,11 @@ const DroppableDay = React.memo(function DroppableDay({
   );
 });
 
+const dropOverlayStyle: React.CSSProperties = {
+  pointerEvents: 'none',
+  zIndex: 9999,
+};
+
 const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) => {
   const [events, setEvents] = React.useState<EventsByDate>(mockEvents);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -224,7 +229,6 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       // Check if the drop target is a valid day
       const toDate = over.id as string;
       // If source and destination are the same, no need to update
-
       if (!fromDate || active.id === over?.id) return;
 
       // Find the event being dragged
@@ -378,8 +382,8 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
           </motion.h2>
 
           <motion.div
-            layout
-            key={currentDate}
+            layout={draggedEvent ? false : true}
+            // key={currentDate}
             // initial={headerInitialConfig}
             // animate={headerAnimateConfig}
             // exit={headerExitConfig}
@@ -421,25 +425,15 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
             </DroppableDay>
           </motion.div>
 
-          <DragOverlay
-            style={{
-              pointerEvents: 'none',
-              zIndex: 9999,
-            }}
-          >
+          <DragOverlay style={dropOverlayStyle}>
             {draggedEvent ? (
               <motion.div
-                className="opacity-90"
+                // className="opacity-90"
                 initial={dragOverlayInitialConfig}
                 animate={dragOverlayAnimateConfig}
                 transition={transitionConfig}
               >
-                <EventCard
-                  event={draggedEvent}
-                  currentDate={currentDate}
-                  onClick={() => {}}
-                  disableLayoutId
-                />
+                <EventCard event={draggedEvent} currentDate={currentDate} disableLayoutId />
               </motion.div>
             ) : null}
           </DragOverlay>
