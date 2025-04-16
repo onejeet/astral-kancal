@@ -10,12 +10,9 @@ import DayColumn from '@/components/common/DayColumn';
 export default function KanCal() {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
-  const handleDateChange = useCallback(
-    (newDate: Dayjs) => {
-      setSelectedDate(newDate);
-    },
-    [selectedDate]
-  );
+  const handleDateChange = useCallback((newDate: Dayjs) => {
+    setSelectedDate(newDate);
+  }, []);
 
   return (
     <LayoutGroup>

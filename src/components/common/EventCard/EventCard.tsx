@@ -24,7 +24,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
       transform: CSS.Transform.toString(transform),
       transition,
       opacity: isDragging ? 0 : 1,
-      touchAction: 'none',
+      touchAction: isDragging ? 'none' : 'auto',
     }),
     [isDragging, transform, transition]
   );
@@ -62,7 +62,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
       className="no-touch-callout"
     >
       <motion.div
-        className="bg-white rounded-2xl shadow-sm cursor-pointer overflow-hidden group touch-none"
+        className={`bg-white rounded-2xl shadow-sm cursor-pointer overflow-hidden group ${isDragging ? 'touch-none' : ''}`}
         layoutId={disableLayoutId ? undefined : `card-${event.id}`}
       >
         <motion.div
