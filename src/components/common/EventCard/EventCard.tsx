@@ -22,7 +22,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
   const style = React.useMemo(
     () =>
       disableLayoutId
-        ? { touchAction: isDragging ? 'none' : 'auto' }
+        ? {
+            touchAction: isDragging ? 'none' : 'auto',
+          }
         : {
             transform: CSS.Transform.toString(transform),
             transition,
@@ -72,7 +74,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
         layoutId={disableLayoutId ? undefined : `card-${event.id}`}
       >
         <motion.div
-          className="relative aspect-[16/9]"
+          className="relative aspect-[14/5]"
           layoutId={disableLayoutId ? undefined : `image-container-${event.id}`}
         >
           <motion.img

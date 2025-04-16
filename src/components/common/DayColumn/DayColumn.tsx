@@ -21,6 +21,7 @@ import { Event, EventsByDate } from '@/types';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { SortableContext } from '@dnd-kit/sortable';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 
 const EventCard = dynamic(() => import('@/components/common/EventCard'), {
   ssr: false,
@@ -240,12 +241,16 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       const updatedEvents = {
         ...events,
         [fromDate]: events[fromDate].filter((e) => e.id !== active.id),
-        [toDate]: [draggedEvent, ...(events[toDate] || [])],
-        // ?.sort((a, b) => {
-        //   const timeA = dayjs(a.time, 'h:mm A').valueOf();
-        //   const timeB = dayjs(b.time, 'h:mm A').valueOf();
-        //   return timeA - timeB;
-        // }),
+        [toDate]: [draggedEvent, ...(events[toDate] || [])]?.sort((a, b) => {
+          const aTime = dayjs(a.time?.trim(), ['h:mm A', 'hh:mm A'], true);
+          const bTime = dayjs(b.time?.trim(), ['h:mm A', 'hh:mm A'], true);
+
+          console.log(
+            `🔍 Sorting "${a.time}" => ${aTime.format('HH:mm')}, "${b.time}" => ${bTime.format('HH:mm')}`
+          );
+
+          return aTime.valueOf() - bTime.valueOf();
+        }),
       };
 
       // Clean up empty dates
@@ -334,7 +339,11 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
 
   return (
     <div>
-      <DndContext sensors={sensors} {...dndContextPropsSimplified}>
+      <DndContext
+        sensors={sensors}
+        modifiers={[restrictToHorizontalAxis]}
+        {...dndContextPropsSimplified}
+      >
         <motion.div
           ref={containerRef}
           className="calendar-container max-w-2xl mx-auto px-4 py-6"
