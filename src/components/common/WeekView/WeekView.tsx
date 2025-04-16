@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useState } from 'react';
-import { RefreshCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import Button from '@/components/core/Button';
 
 interface WeekViewProps {
@@ -39,8 +39,9 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
 
   const handleSwipe = React.useCallback(
     (newDate: Dayjs, refreshOnly?: boolean) => {
-      const newDirection = dayjs(newDate).isAfter(localSelectedDate) ? 1 : -1;
-      setDirection(newDirection);
+      const dayDiff = dayjs(newDate).diff(localSelectedDate, 'day');
+      // const newDirection = dayjs(newDate).isAfter(localSelectedDate) ? 1 : -1;
+      setDirection(dayDiff > 10 || dayDiff < -10 ? 1 : dayDiff);
       setCurrentDate(newDate);
       setLocalSelectedDate(newDate);
       if (!refreshOnly) {
@@ -86,8 +87,22 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
           />
         )}
       </div>
-      <div className="relative w-full max-w-2xl mx-auto ">
-        <div className="flex justify-center items-center overflow-hidden">
+      <div className="relative w-full max-w-2xl  mx-auto ">
+        <div className="absolute top-1  w-full h-[80px] flex justify-between items-center px-4">
+          <motion.div
+            onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
+            className="cursor-pointer relative left-[-48px] text-white"
+          >
+            <ChevronLeft size={24} />
+          </motion.div>
+          <motion.div
+            onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
+            className="cursor-pointer relative left-[48px] text-white"
+          >
+            <ChevronRight size={24} />
+          </motion.div>
+        </div>
+        <div className="relative h-[80px] w-full overflow-hidden flex items-center justify-center">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
               key={currentDate.toISOString()}
@@ -107,7 +122,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
                   <motion.button
                     key={date.toISOString()}
                     onClick={() => handleSwipe(date)}
-                    className={`flex flex-col items-center p-1.5 xs:p-2 sm:p-2.5 md:p-3 my-2 rounded-xl transition-all cursor-pointer flex-1 min-w-[60px] sm:min-w-[70px] md:min-w-[80px] ${
+                    className={`flex flex-col items-center p-1.5 xs:p-2 sm:p-2.5 md:p-3 my-2 rounded-xl transition-all cursor-pointer flex-1 min-w-[60px] sm:min-w-[70px] md:min-w-[80px]  ${
                       isSelected
                         ? 'bg-gradient-to-br from-indigo-900 to-purple-600 text-white'
                         : 'text-white/90 hover:bg-white/10'
