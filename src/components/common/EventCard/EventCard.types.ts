@@ -4,4 +4,5 @@ export interface EventCardProps {
   event: Event;
   onClick?: () => void;
   disableLayoutId?: boolean;
+  currentDate: string;
 }

@@ -7,24 +7,22 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  DragOverEvent,
   useDroppable,
   useSensors,
   useSensor,
   PointerSensor,
   TouchSensor,
   DragMoveEvent,
-  useDraggable,
   useDndContext,
 } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
-import mockEvents, { formatDate } from '@/lib/mockData';
+import mockEvents from '@/lib/mockData';
 import { Event, EventsByDate } from '@/types';
 import EventCard from '@/components/common/EventCard';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { SortableContext, useSortable } from '@dnd-kit/sortable';
+import { SortableContext } from '@dnd-kit/sortable';
 
 interface DayColumnProps {
   selectedDate: Dayjs;
@@ -130,7 +128,7 @@ const DroppableDay = React.memo(function DroppableDay({
       transition={transitionConfig}
     >
       {isActive && !isSameSpot && (
-        <div className="inset-x-0 top-0 h-20 mb-10 bg-indigo-100/60 rounded-2xl  z-0" />
+        <div className="inset-x-0 top-0 h-80 mb-10 bg-indigo-100/60 rounded-2xl  z-0" />
       )}
 
       {/* Actual content */}
@@ -149,22 +147,24 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
   > | null>(null);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  // const sensors = useSensors(
+  //   useSensor(
+  //     isMobile ? TouchSensor : PointerSensor, // Choose the sensor based on mobile state
+  //     {
+  //       activationConstraint: isMobile
+  //         ? { delay: 200, tolerance: 5 } // TouchSensor configuration
+  //         : { distance: 8 }, // PointerSensor configuration
+  //     }
+  //   )
+  // );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
+      activationConstraint: { distance: 8, delay: isMobile ? 200 : 0, tolerance: isMobile ? 5 : 0 },
     })
   );
-
-  const isMobile = useIsMobile();
 
   const startDateScroll = useCallback(
     (direction: 'prev' | 'next') => {
@@ -222,6 +222,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       // Check if the drop target is a valid day
       const toDate = over.id as string;
       // If source and destination are the same, no need to update
+
       if (!fromDate || active.id === over?.id) return;
 
       // Find the event being dragged
@@ -259,6 +260,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
       // Skip edge detection if we're dragging the container
+      console.log('ZZ: onDragaa', isContainerDragging, containerRef?.current);
       if (isContainerDragging) return;
 
       const container = containerRef?.current;
@@ -272,7 +274,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       // Use the left side of the dragged item for more accurate edge detection
       const edge = isMobile ? 5 : 20;
 
-      console.log('handleDragMove Item center:', activeRect, rect.left, rect.right);
+      console.log('ZZ: handleDragMove Item center:', activeRect, rect.left, rect.right);
 
       // Check if the center of the dragged item is in the edge zones
       if (activeRect.left + edge < rect.left) {
@@ -335,16 +337,26 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       <DndContext sensors={sensors} {...dndContextPropsSimplified}>
         <motion.div
           ref={containerRef}
-          className="calendar-container relative max-w-2xl mx-auto px-4 py-6"
-          drag={isMobile ? 'x' : undefined}
+          className="calendar-container max-w-2xl mx-auto px-4 py-6"
+          drag={isMobile && !draggedEvent && !isContainerDragging ? 'x' : undefined}
           dragConstraints={{ left: 0, right: 0 }}
-          onDragStart={() => {
+          style={{
+            pointerEvents: isContainerDragging ? 'none' : 'auto',
+          }}
+          onDragStart={(e) => {
+            // Avoid container drag if touch/click started on an event card
+            const isEventCard = (e.target as HTMLElement)?.closest?.('[data-draggable-event-card]');
+            if (draggedEvent || isEventCard) return;
+
             // Mark that we're dragging the container
             setIsContainerDragging(true);
             // Stop any ongoing date scrolling
             stopDateScroll();
           }}
           onDragEnd={(event, info) => {
+            if (draggedEvent) {
+              return;
+            }
             // Reset container dragging state
             setIsContainerDragging(false);
 
@@ -371,7 +383,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
 
           <motion.div
             layout
-            //   key={currentDate}
+            key={currentDate}
             // initial={headerInitialConfig}
             // animate={headerAnimateConfig}
             // exit={headerExitConfig}
@@ -392,7 +404,11 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
                     exit={eventCardExitConfig}
                     transition={eventCardTransitionConfig}
                   >
-                    <EventCard event={event} onClick={() => handleCardClick(event)} />
+                    <EventCard
+                      event={event}
+                      currentDate={currentDate}
+                      onClick={() => handleCardClick(event)}
+                    />
                   </motion.div>
                 ))}
               </SortableContext>
@@ -410,7 +426,13 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
             </DroppableDay>
           </motion.div>
 
-          <DragOverlay>
+          <DragOverlay
+            style={{
+              //  transform: 'translate3d(0, 0, 0)', // force GPU
+              pointerEvents: 'none', // prevent tap blocking
+              zIndex: 9999,
+            }}
+          >
             {draggedEvent ? (
               <motion.div
                 className="opacity-90"
@@ -418,7 +440,12 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
                 animate={dragOverlayAnimateConfig}
                 transition={transitionConfig}
               >
-                <EventCard event={draggedEvent} onClick={() => {}} disableLayoutId />
+                <EventCard
+                  event={draggedEvent}
+                  currentDate={currentDate}
+                  onClick={() => {}}
+                  disableLayoutId
+                />
               </motion.div>
             ) : null}
           </DragOverlay>

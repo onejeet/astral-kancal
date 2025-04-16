@@ -6,9 +6,13 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { EventCardProps } from './EventCard.types';
 
-const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, currentDate }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: event.id,
+    data: {
+      eventId: event.id,
+      containerId: `Sortable-${currentDate}`, // or `Sortable-${currentDate}` to match your context
+    },
   });
 
   // Simple touch tracking to prevent click after drag
@@ -19,7 +23,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId }
     () => ({
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
+      opacity: isDragging ? 0 : 1,
+      touchAction: 'none',
     }),
     [isDragging, transform, transition]
   );
@@ -52,10 +57,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId }
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onClick={handleClick}
+      style={style}
+      data-draggable-event-card
+      className="no-touch-callout"
     >
       <motion.div
-        style={style}
-        className="bg-white rounded-2xl shadow-sm cursor-pointer overflow-hidden group"
+        className="bg-white rounded-2xl shadow-sm cursor-pointer overflow-hidden group touch-none"
         layoutId={disableLayoutId ? undefined : `card-${event.id}`}
       >
         <motion.div
