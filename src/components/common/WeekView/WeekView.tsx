@@ -5,6 +5,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import Button from '@/components/core/Button';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface WeekViewProps {
   selectedDate: Dayjs;
@@ -26,6 +27,8 @@ const btnTransitionConfig = {
 const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
   const [localSelectedDate, setLocalSelectedDate] = React.useState<Dayjs>(selectedDate);
   const [direction, setDirection] = useState(0);
+
+  const isMobile = useIsMobile();
 
   const isTodaySelected = React.useMemo(() => {
     return dayjs(localSelectedDate).isSame(dayjs(), 'day');
@@ -89,20 +92,23 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
         )}
       </div>
       <div className="relative w-full max-w-2xl mx-auto">
-        <div className="absolute top-1 w-full h-[80px] flex justify-between items-center px-4">
-          <motion.div
-            onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
-            className="cursor-pointer relative left-[-48px] text-white"
-          >
-            <ChevronLeft size={24} />
-          </motion.div>
-          <motion.div
-            onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
-            className="cursor-pointer relative left-[48px] text-white"
-          >
-            <ChevronRight size={24} />
-          </motion.div>
-        </div>
+        {isMobile && (
+          <div className="absolute top-1 w-full h-[80px] flex justify-between items-center px-4">
+            <motion.div
+              onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
+              className="cursor-pointer relative left-[-48px] text-white"
+            >
+              <ChevronLeft size={24} />
+            </motion.div>
+            <motion.div
+              onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
+              className="cursor-pointer relative left-[48px] text-white"
+            >
+              <ChevronRight size={24} />
+            </motion.div>
+          </div>
+        )}
+
         <div className="relative h-[80px] w-full overflow-hidden flex items-center justify-center">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -113,8 +119,8 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
               animate="center"
               exit="exit"
               transition={transitionConfig}
-              className="flex justify-center items-center gap-0.5 sm:gap-4 touch-pan-x"
-              drag="x"
+              className="flex justify-center items-center gap-0.5 sm:gap-4 touch-pan-x max-w-full overflow-hidden"
+              drag={isMobile ? 'x' : undefined}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
               onDragEnd={(e, info) => {
@@ -138,7 +144,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
                   <motion.button
                     key={date.toISOString()}
                     onClick={() => handleSwipe(date)}
-                    className={`flex flex-col items-center p-1.5 xs:p-2 sm:p-2.5 md:p-3 my-2 rounded-xl transition-all cursor-pointer flex-1 min-w-[60px] sm:min-w-[70px] md:min-w-[80px]  ${
+                    className={`flex flex-col items-center flex-shrink-0 p-1.5 xs:p-2 sm:p-2.5 md:p-3 my-2 rounded-xl transition-all cursor-pointer min-w-[50px] sm:min-w-[60px] md:min-w-[80px]  ${
                       isSelected
                         ? 'bg-gradient-to-br from-indigo-900 to-purple-600 text-white'
                         : 'text-white/90 hover:bg-white/10'
