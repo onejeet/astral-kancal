@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { useState, useCallback, useMemo, RefObject } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import {
   DndContext,
   DragEndEvent,
@@ -11,7 +11,6 @@ import {
   useSensors,
   useSensor,
   PointerSensor,
-  TouchSensor,
   DragMoveEvent,
   useDndContext,
 } from '@dnd-kit/core';
@@ -19,10 +18,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
 import mockEvents from '@/lib/mockData';
 import { Event, EventsByDate } from '@/types';
-import EventCard from '@/components/common/EventCard';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { SortableContext } from '@dnd-kit/sortable';
+
+const EventCard = dynamic(() => import('@/components/common/EventCard'), {
+  ssr: false,
+});
 
 interface DayColumnProps {
   selectedDate: Dayjs;
@@ -162,7 +164,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8, delay: isMobile ? 200 : 0, tolerance: isMobile ? 5 : 0 },
+      activationConstraint: { distance: 8, delay: 200, tolerance: 5 },
     })
   );
 
@@ -306,15 +308,9 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
     }, 200);
   }, []);
 
-  const handleDateChange = useCallback(
-    (newDate: Dayjs) => {
-      const currentDate = dayjs(selectedDate);
-      const nextDate = dayjs(newDate);
-
-      setSelectedDate(newDate);
-    },
-    [selectedDate, setSelectedDate]
-  );
+  const handleDateChange = useCallback((newDate: Dayjs) => {
+    setSelectedDate(newDate);
+  }, []);
 
   const currentDate = useMemo(() => dayjs(selectedDate).format('YYYY-MM-DD'), [selectedDate]);
 
@@ -394,7 +390,6 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
               <SortableContext
                 id={`Sortable-${currentDate}`}
                 items={currentDateEvents.map((e) => e.id)}
-                // strategy={horizontalListSortingStrategy}
               >
                 {currentDateEvents.map((event) => (
                   <motion.div
@@ -428,8 +423,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
 
           <DragOverlay
             style={{
-              //  transform: 'translate3d(0, 0, 0)', // force GPU
-              pointerEvents: 'none', // prevent tap blocking
+              pointerEvents: 'none',
               zIndex: 9999,
             }}
           >
