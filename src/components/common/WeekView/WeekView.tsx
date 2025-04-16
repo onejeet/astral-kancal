@@ -5,6 +5,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import Button from '@/components/core/Button';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface WeekViewProps {
   selectedDate: Dayjs;
@@ -12,10 +13,6 @@ interface WeekViewProps {
 }
 
 const transitionConfig = {
-  // type: 'spring',
-  // stiffness: 300,
-  // damping: 20,
-  // duration: 0.3,
   type: 'tween',
   ease: 'linear',
   duration: 0.3,
@@ -24,6 +21,7 @@ const transitionConfig = {
 const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
   const [localSelectedDate, setLocalSelectedDate] = React.useState<Dayjs>(selectedDate);
   const [direction, setDirection] = useState(0);
+  const isMobile = useIsMobile();
 
   const isTodaySelected = React.useMemo(() => {
     return dayjs(localSelectedDate).isSame(dayjs(), 'day');
@@ -40,7 +38,6 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
   const handleSwipe = React.useCallback(
     (newDate: Dayjs, refreshOnly?: boolean) => {
       const dayDiff = dayjs(newDate).diff(localSelectedDate, 'day');
-      // const newDirection = dayjs(newDate).isAfter(localSelectedDate) ? 1 : -1;
       setDirection(dayDiff > 10 || dayDiff < -10 ? 1 : dayDiff);
       setCurrentDate(newDate);
       setLocalSelectedDate(newDate);
@@ -87,21 +84,24 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
           />
         )}
       </div>
-      <div className="relative w-full max-w-2xl  mx-auto ">
-        <div className="absolute top-1  w-full h-[80px] flex justify-between items-center px-4">
-          <motion.div
-            onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
-            className="cursor-pointer relative left-[-48px] text-white"
-          >
-            <ChevronLeft size={24} />
-          </motion.div>
-          <motion.div
-            onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
-            className="cursor-pointer relative left-[48px] text-white"
-          >
-            <ChevronRight size={24} />
-          </motion.div>
-        </div>
+      <div className="relative w-full max-w-2xl mx-auto">
+        {!isMobile && (
+          <div className="absolute top-1 w-full h-[80px] flex justify-between items-center px-4">
+            <motion.div
+              onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
+              className="cursor-pointer relative left-[-48px] text-white"
+            >
+              <ChevronLeft size={24} />
+            </motion.div>
+            <motion.div
+              onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
+              className="cursor-pointer relative left-[48px] text-white"
+            >
+              <ChevronRight size={24} />
+            </motion.div>
+          </div>
+        )}
+
         <div className="relative h-[80px] w-full overflow-hidden flex items-center justify-center">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -112,7 +112,17 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
               animate="center"
               exit="exit"
               transition={transitionConfig}
-              className="flex justify-center items-center gap-0.5 sm:gap-4"
+              className="flex justify-center items-center gap-0.5 sm:gap-4 touch-pan-x"
+              drag={isMobile ? 'x' : undefined}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x > 80) {
+                  handleSwipe(dayjs(selectedDate).subtract(5, 'day'));
+                } else if (info.offset.x < -80) {
+                  handleSwipe(dayjs(selectedDate).add(5, 'day'));
+                }
+              }}
             >
               {weekDays.map((date) => {
                 const isSelected = dayjs(date).isSame(localSelectedDate, 'day');
