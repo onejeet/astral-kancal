@@ -5,7 +5,6 @@ import dayjs, { Dayjs } from 'dayjs';
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import Button from '@/components/core/Button';
-import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface WeekViewProps {
   selectedDate: Dayjs;
@@ -18,10 +17,15 @@ const transitionConfig = {
   duration: 0.3,
 };
 
+const btnTransitionConfig = {
+  type: 'spring',
+  stiffness: 300,
+  damping: 20,
+};
+
 const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
   const [localSelectedDate, setLocalSelectedDate] = React.useState<Dayjs>(selectedDate);
   const [direction, setDirection] = useState(0);
-  const isMobile = useIsMobile();
 
   const isTodaySelected = React.useMemo(() => {
     return dayjs(localSelectedDate).isSame(dayjs(), 'day');
@@ -85,23 +89,20 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
         )}
       </div>
       <div className="relative w-full max-w-2xl mx-auto">
-        {!isMobile && (
-          <div className="absolute top-1 w-full h-[80px] flex justify-between items-center px-4">
-            <motion.div
-              onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
-              className="cursor-pointer relative left-[-48px] text-white"
-            >
-              <ChevronLeft size={24} />
-            </motion.div>
-            <motion.div
-              onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
-              className="cursor-pointer relative left-[48px] text-white"
-            >
-              <ChevronRight size={24} />
-            </motion.div>
-          </div>
-        )}
-
+        <div className="absolute top-1 w-full h-[80px] flex justify-between items-center px-4">
+          <motion.div
+            onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
+            className="cursor-pointer relative left-[-48px] text-white"
+          >
+            <ChevronLeft size={24} />
+          </motion.div>
+          <motion.div
+            onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
+            className="cursor-pointer relative left-[48px] text-white"
+          >
+            <ChevronRight size={24} />
+          </motion.div>
+        </div>
         <div className="relative h-[80px] w-full overflow-hidden flex items-center justify-center">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -113,7 +114,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
               exit="exit"
               transition={transitionConfig}
               className="flex justify-center items-center gap-0.5 sm:gap-4 touch-pan-x"
-              drag={isMobile ? 'x' : undefined}
+              drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
               onDragEnd={(e, info) => {
@@ -122,6 +123,11 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
                 } else if (info.offset.x < -80) {
                   handleSwipe(dayjs(selectedDate).add(5, 'day'));
                 }
+              }}
+              style={{
+                background: 'linear-gradient(to left, rgba(0,0,0,0.4), transparent 25%)',
+                backgroundSize: '200% 100%',
+                transition: 'background 0.3s ease-out',
               }}
             >
               {weekDays.map((date) => {
@@ -142,11 +148,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
                     animate={{
                       scale: isSelected ? 1.1 : 1,
                     }}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 300,
-                      damping: 20,
-                    }}
+                    transition={btnTransitionConfig}
                   >
                     <span className="text-sm font-medium">{dayName}</span>
                     <span className="text-xl font-bold mt-1">{dayNumber}</span>
