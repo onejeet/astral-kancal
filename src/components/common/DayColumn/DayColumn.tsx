@@ -19,7 +19,6 @@ import { Event, EventsByDate } from '@/types';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { SortableContext } from '@dnd-kit/sortable';
-import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import DroppableDay from '../DayDroppable';
 
 const EventCard = dynamic(() => import('@/components/common/EventCard'), {
@@ -95,6 +94,13 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
   //     }
   //   )
   // );
+
+  React.useEffect(() => {
+    if (document?.documentElement || document?.body) {
+      document.body.scrollTop = 0; // For older browsers
+      document.documentElement.scrollTop = 0; // For modern browsers
+    }
+  }, [selectedDate]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -269,7 +275,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
     <div>
       <DndContext
         sensors={sensors}
-        modifiers={[restrictToHorizontalAxis]}
+        // modifiers={[restrictToHorizontalAxis]}
         {...dndContextPropsSimplified}
       >
         <motion.div

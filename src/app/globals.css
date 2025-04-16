@@ -12,3 +12,8 @@ body {
   -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
   touch-action: manipulation; /* Prevent scroll/zoom gestures */
 }
+
+body.dragging {
+  overflow: hidden;
+  touch-action: none;
+}
