@@ -32,6 +32,13 @@ const images = [
   'https://images.unsplash.com/photo-1449034446853-66c86144b0ad',
   'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40',
   'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4',
+  'https://images.unsplash.com/photo-1743266460929-325c765019f6',
+  'https://images.unsplash.com/photo-1742787584125-d94d44334047',
+  'https://images.unsplash.com/photo-1548199973-03cce0bbc87b',
+  'https://images.unsplash.com/photo-1558929996-da64ba858215',
+  'https://images.unsplash.com/photo-1725027090555-40b031f52b01',
+  'https://images.unsplash.com/photo-1743102821158-314fc4c16d32',
+  'https://images.unsplash.com/photo-1743051071378-2352ac2f4e48',
 ];
 
 const generateRandomTime = () => {
