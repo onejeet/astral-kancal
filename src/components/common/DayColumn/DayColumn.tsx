@@ -81,7 +81,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
   > | null>(null);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   React.useEffect(() => {
     if (document?.documentElement || document?.body) {

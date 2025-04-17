@@ -16,7 +16,7 @@ const DroppableDay = React.memo(function DroppableDay({
   const { setNodeRef, isOver } = useDroppable({ id: date });
   const { active } = useDndContext();
   const isSameSpot = active?.id && active?.data?.current?.date === date;
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   console.log('AA: DroppableDay', isActive, active, date);
 

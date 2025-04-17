@@ -28,7 +28,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
   const [localSelectedDate, setLocalSelectedDate] = React.useState<Dayjs>(selectedDate);
   const [direction, setDirection] = useState(0);
 
-  const isMobile = useIsMobile();
+  const { isMobile, isTouchDevice } = useIsMobile();
 
   const isTodaySelected = React.useMemo(() => {
     return dayjs(localSelectedDate).isSame(dayjs(), 'day');
@@ -91,25 +91,23 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
           />
         )}
       </div>
-
-      <div className="relative w-full max-w-2xl mx-auto overflow-hidden">
+      <div className="relative w-full max-w-2xl mx-auto">
         {!isMobile && (
-          <div className="absolute top-1 w-full h-[80px] flex justify-between items-center px-4 z-10">
+          <div className="absolute top-1 w-full h-[80px] flex justify-between items-center px-4">
             <motion.div
-              onClick={() => handleSwipe(dayjs(selectedDate).subtract(5, 'day'))}
-              className="cursor-pointer text-white"
+              onClick={() => handleSwipe(dayjs(selectedDate).subtract(7, 'day'))}
+              className="cursor-pointer relative left-[-48px] text-white"
             >
               <ChevronLeft size={24} />
             </motion.div>
             <motion.div
-              onClick={() => handleSwipe(dayjs(selectedDate).add(5, 'day'))}
-              className="cursor-pointer text-white"
+              onClick={() => handleSwipe(dayjs(selectedDate).add(7, 'day'))}
+              className="cursor-pointer relative left-[48px] text-white"
             >
               <ChevronRight size={24} />
             </motion.div>
           </div>
         )}
-
         <div className="relative h-[80px] w-full flex items-center justify-center overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -120,11 +118,10 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
               animate="center"
               exit="exit"
               transition={transitionConfig}
-              className="flex justify-center items-center gap-2 sm:gap-4 max-w-full w-full touch-pan-x"
-              drag={isMobile ? 'x' : undefined}
+              className="flex justify-center items-center gap-1 sm:gap-4 touch-pan-x max-w-full overflow-hidden"
+              drag={isMobile || isTouchDevice ? 'x' : undefined}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
-              dragMomentum={false}
               onDragEnd={(e, info) => {
                 if (info.offset.x > 80) {
                   handleSwipe(dayjs(selectedDate).subtract(5, 'day'));
@@ -133,9 +130,6 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
                 }
               }}
               style={{
-                touchAction: 'pan-y',
-                willChange: 'transform',
-                overflow: 'clip',
                 background: 'linear-gradient(to left, rgba(0,0,0,0.4), transparent 25%)',
                 backgroundSize: '200% 100%',
                 transition: 'background 0.3s ease-out',
@@ -149,7 +143,7 @@ const WeekView = ({ selectedDate, onDateSelect }: WeekViewProps) => {
                   <motion.button
                     key={date.toISOString()}
                     onClick={() => handleSwipe(date)}
-                    className={`flex flex-col items-center flex-shrink-0 p-1.5 xs:p-2 sm:p-2.5 md:p-3 my-2 rounded-xl transition-all cursor-pointer min-w-[50px] sm:min-w-[60px] md:min-w-[80px] ${
+                    className={`flex flex-col items-center flex-shrink-0 p-1.5 xs:p-2 sm:p-2.5 md:p-3 my-2 rounded-xl transition-all cursor-pointer min-w-[50px] sm:min-w-[60px] md:min-w-[80px]  ${
                       isSelected
                         ? 'bg-gradient-to-br from-indigo-900 to-purple-600 text-white'
                         : 'text-white/90 hover:bg-white/10'
