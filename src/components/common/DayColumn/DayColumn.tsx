@@ -236,6 +236,11 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
     [startDateScroll, stopDateScroll, isContainerDragging, isMobile]
   );
 
+  const handleDragCancel = React.useCallback(() => {
+    document.body.style.touchAction = 'auto';
+    setDraggedEvent(null);
+  }, []);
+
   const handleCardClick = useCallback(
     (event: Event) => {
       if (draggedEvent) return;
@@ -268,8 +273,9 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       onDragStart: handleDragStart,
       onDragEnd: handleDragEnd,
       onDragMove: handleDragMove,
+      onDragCancel: handleDragCancel,
     }),
-    [handleDragStart, handleDragEnd, handleDragMove]
+    [handleDragStart, handleDragEnd, handleDragMove, handleDragCancel]
   );
 
   return (

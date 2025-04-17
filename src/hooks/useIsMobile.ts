@@ -3,14 +3,10 @@ import { useEffect, useState } from 'react';
 export function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
 
-  const isTouchDevice = (): boolean => {
-    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-      return (
-        'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
-      );
-    }
-    return false;
-  };
+  const isTouchDevice =
+    typeof window !== 'undefined' && typeof navigator !== 'undefined'
+      ? 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      : false;
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= breakpoint);
