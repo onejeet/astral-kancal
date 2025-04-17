@@ -30,7 +30,7 @@ export default function EventDetailModal({ isOpen, onClose, event }: Props) {
           <Dialog.Panel className="w-full">
             <motion.div
               layoutId={`card-${event.id}`}
-              className="relative w-full min-w-full sm:min-w-[600px] max-w-[800px] overflow-hidden rounded-3xl bg-white shadow-2xl mx-auto"
+              className="relative w-full min-w-full sm:min-w-[600px] max-w-[800px] overflow-hidden rounded-3xl bg-white shadow-2xl mx-auto z-49"
             >
               <motion.div
                 className="relative aspect-[16/9]"

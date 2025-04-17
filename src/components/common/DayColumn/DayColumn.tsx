@@ -19,6 +19,7 @@ import { Event, EventsByDate } from '@/types';
 import EventDetailModal from '@/components/common/EventDetailDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import DroppableDay from '../DayDroppable';
+import KanbanBoard from '../KanbanBoard/KanbanBoard';
 
 const EventCard = dynamic(() => import('@/components/common/EventCard'), {
   ssr: false,
@@ -66,11 +67,6 @@ const transitionConfig = {
   ease: 'easeOut',
 };
 
-const dropOverlayStyle: React.CSSProperties = {
-  pointerEvents: 'none',
-  zIndex: 9999,
-};
-
 const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) => {
   const [events, setEvents] = React.useState<EventsByDate>(mockEvents);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -79,6 +75,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
   const [dateScrollInterval, setDateScrollInterval] = useState<ReturnType<
     typeof setInterval
   > | null>(null);
+  const [isContainerDragging, setIsContainerDragging] = useState(false);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
   const { isMobile, isTouchDevice } = useIsMobile();
@@ -176,17 +173,18 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       const updatedEvents = {
         ...events,
         [fromDate]: events[fromDate].filter((e) => e.id !== active.id),
-        [toDate]: [draggedEvent, ...(events[toDate] || [])],
-        // ?.sort((a, b) => {
-        //   const aTime = dayjs(a.time?.trim(), ['h:mm A', 'hh:mm A'], true);
-        //   const bTime = dayjs(b.time?.trim(), ['h:mm A', 'hh:mm A'], true);
+        [toDate]: isMobile
+          ? [draggedEvent, ...(events[toDate] || [])]
+          : [draggedEvent, ...(events[toDate] || [])]?.sort((a, b) => {
+              const aTime = dayjs(a.time?.trim(), ['h:mm A', 'hh:mm A'], true);
+              const bTime = dayjs(b.time?.trim(), ['h:mm A', 'hh:mm A'], true);
 
-        //   console.log(
-        //     `🔍 Sorting "${a.time}" => ${aTime.format('HH:mm')}, "${b.time}" => ${bTime.format('HH:mm')}`
-        //   );
+              console.log(
+                `🔍 Sorting "${a.time}" => ${aTime.format('HH:mm')}, "${b.time}" => ${bTime.format('HH:mm')}`
+              );
 
-        //   return aTime.valueOf() - bTime.valueOf();
-        // }),
+              return aTime.valueOf() - bTime.valueOf();
+            }),
       };
 
       if (updatedEvents[fromDate].length === 0) {
@@ -197,10 +195,8 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
       document.body.style.touchAction = 'auto';
       setEvents(updatedEvents);
     },
-    [events, stopDateScroll, setEvents, setDraggedEvent]
+    [events, stopDateScroll, setEvents, setDraggedEvent, isMobile]
   );
-
-  const [isContainerDragging, setIsContainerDragging] = useState(false);
 
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
@@ -268,8 +264,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
 
   const formattedDate = useMemo(() => dayjs(selectedDate).format('ddd MMM D YYYY'), [selectedDate]);
 
-  // Use the original dndContextProps directly
-  const dndContextPropsSimplified = useMemo(
+  const dndContextProps = useMemo(
     () => ({
       onDragStart: handleDragStart,
       onDragEnd: handleDragEnd,
@@ -281,116 +276,132 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
 
   return (
     <div>
-      <DndContext sensors={sensors} autoScroll {...dndContextPropsSimplified}>
-        <motion.div
-          ref={containerRef}
-          className="calendar-container max-w-2xl mx-auto px-4 py-6 overflow-hidden"
-          drag={
-            (isMobile || isTouchDevice) && !draggedEvent && !isContainerDragging ? 'x' : undefined
-          }
-          dragConstraints={{ left: 0, right: 0 }}
-          style={{
-            pointerEvents: isContainerDragging ? 'none' : 'auto',
-          }}
-          onDragStart={(e) => {
-            // Avoid container drag if touch/click started on an event card
-            const isEventCard = (e.target as HTMLElement)?.closest?.('[data-draggable-event-card]');
-            if (draggedEvent || isEventCard) return;
-
-            // Mark that we're dragging the container
-            setIsContainerDragging(true);
-            // Stop any ongoing date scrolling
-            stopDateScroll();
-          }}
-          onDragEnd={(event, info) => {
-            if (draggedEvent) {
-              return;
-            }
-            // Reset container dragging state
-            setIsContainerDragging(false);
-
-            if (info.offset.x > 100) {
-              handleDateChange(dayjs(selectedDate).subtract(1, 'day'));
-            } else if (info.offset.x < -100) {
-              handleDateChange(dayjs(selectedDate).add(1, 'day'));
-            }
-          }}
-        >
-          <motion.h2
-            className="text-2xl font-bold text-gray-900 mb-4"
-            //  key={selectedDate.toISOString()}
-            // initial={headerInitialConfig}
-            // animate={headerAnimateConfig}
-            // //  exit={headerExitConfig}
-            // transition={transitionConfig}
-          >
-            <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-semibold">{formattedDate}</h2>
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"></div>
-            </div>
-          </motion.h2>
-
+      <DndContext sensors={sensors} autoScroll {...dndContextProps}>
+        {isMobile ? (
           <motion.div
-            layout={draggedEvent ? false : true}
-            // key={currentDate}
-            // initial={headerInitialConfig}
-            // animate={headerAnimateConfig}
-            // exit={headerExitConfig}
-            transition={transitionConfig}
+            ref={containerRef}
+            className="calendar-container max-w-2xl mx-auto px-4 py-6 overflow-hidden"
+            drag={
+              (isMobile || isTouchDevice) && !draggedEvent && !isContainerDragging ? 'x' : undefined
+            }
+            dragConstraints={{ left: 0, right: 0 }}
+            style={{
+              pointerEvents: isContainerDragging ? 'none' : 'auto',
+            }}
+            onDragStart={(e) => {
+              // Avoid container drag if touch/click started on an event card
+              const isEventCard = (e.target as HTMLElement)?.closest?.(
+                '[data-draggable-event-card]'
+              );
+              if (draggedEvent || isEventCard) return;
+
+              // Mark that we're dragging the container
+              setIsContainerDragging(true);
+              // Stop any ongoing date scrolling
+              stopDateScroll();
+            }}
+            onDragEnd={(event, info) => {
+              if (draggedEvent) {
+                return;
+              }
+              // Reset container dragging state
+              setIsContainerDragging(false);
+
+              if (info.offset.x > 100) {
+                handleDateChange(dayjs(selectedDate).subtract(1, 'day'));
+              } else if (info.offset.x < -100) {
+                handleDateChange(dayjs(selectedDate).add(1, 'day'));
+              }
+            }}
           >
-            <DroppableDay date={currentDate} isActive={!!draggedEvent}>
-              {/* <AnimatePresence mode="sync"> */}
+            <motion.h2
+              className="text-2xl font-bold text-gray-900 mb-4"
+              //  key={selectedDate.toISOString()}
+              // initial={headerInitialConfig}
+              // animate={headerAnimateConfig}
+              // //  exit={headerExitConfig}
+              // transition={transitionConfig}
+            >
+              <div className="flex items-center space-x-4">
+                <h2 className="text-2xl font-semibold">{formattedDate}</h2>
+                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"></div>
+              </div>
+            </motion.h2>
 
-              {currentDateEvents.map((event) => (
-                <motion.div
-                  key={event.id}
-                  initial={eventCardInitialConfig}
-                  animate={eventCardAnimateConfig}
-                  exit={eventCardExitConfig}
-                  transition={eventCardTransitionConfig}
-                >
-                  <EventCard
-                    event={event}
-                    currentDate={currentDate}
-                    onClick={() => handleCardClick(event)}
-                  />
-                </motion.div>
-              ))}
+            <motion.div
+              layout={draggedEvent ? false : true}
+              // key={currentDate}
+              // initial={headerInitialConfig}
+              // animate={headerAnimateConfig}
+              // exit={headerExitConfig}
+              transition={transitionConfig}
+            >
+              <DroppableDay date={currentDate} isActive={!!draggedEvent}>
+                {/* <AnimatePresence mode="sync"> */}
 
-              {currentDateEvents.length === 0 && (
-                <motion.p
-                  //  initial={eventCardInitialConfig}
-                  animate={eventCardAnimateConfig}
-                  exit={eventCardExitConfig}
-                  className="text-center text-gray-500 py-8 min-h-200"
-                >
-                  No events scheduled for this day
-                </motion.p>
-              )}
-              {/* </AnimatePresence> */}
-            </DroppableDay>
+                {currentDateEvents.map((event) => (
+                  <motion.div
+                    key={event.id}
+                    initial={eventCardInitialConfig}
+                    animate={eventCardAnimateConfig}
+                    exit={eventCardExitConfig}
+                    transition={eventCardTransitionConfig}
+                  >
+                    <EventCard
+                      event={event}
+                      currentDate={currentDate}
+                      onClick={() => handleCardClick(event)}
+                    />
+                  </motion.div>
+                ))}
+
+                {currentDateEvents.length === 0 && (
+                  <motion.p
+                    //  initial={eventCardInitialConfig}
+                    animate={eventCardAnimateConfig}
+                    exit={eventCardExitConfig}
+                    className="text-center text-gray-500 py-8 min-h-200"
+                  >
+                    No events scheduled for this day
+                  </motion.p>
+                )}
+                {/* </AnimatePresence> */}
+              </DroppableDay>
+            </motion.div>
           </motion.div>
-
-          {draggedEvent ? (
-            <DragOverlay style={{ ...dropOverlayStyle, display: draggedEvent ? 'block' : 'none' }}>
-              <motion.div
-                // className="opacity-90"
-                initial={dragOverlayInitialConfig}
-                animate={dragOverlayAnimateConfig}
-                transition={transitionConfig}
-              >
-                <EventCard event={draggedEvent} currentDate={currentDate} disableLayoutId />
-              </motion.div>
-            </DragOverlay>
-          ) : null}
-        </motion.div>
-      </DndContext>
-
-      <AnimatePresence>
-        {selectedEvent && (
-          <EventDetailModal isOpen={isModalOpen} event={selectedEvent} onClose={closeModal} />
+        ) : (
+          // Desktop Kanban Layout
+          <KanbanBoard
+            events={events}
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            draggedEvent={draggedEvent}
+            handleCardClick={handleCardClick}
+          />
         )}
-      </AnimatePresence>
+
+        {draggedEvent && (
+          <DragOverlay style={{ pointerEvents: 'none', zIndex: 9999 }}>
+            <motion.div
+              initial={dragOverlayInitialConfig}
+              animate={dragOverlayAnimateConfig}
+              transition={transitionConfig}
+            >
+              <EventCard
+                event={draggedEvent}
+                currentDate={currentDate}
+                disableLayoutId
+                isMinimal={!isMobile}
+              />
+            </motion.div>
+          </DragOverlay>
+        )}
+        <AnimatePresence>
+          {selectedEvent && (
+            <EventDetailModal isOpen={isModalOpen} event={selectedEvent} onClose={closeModal} />
+          )}
+        </AnimatePresence>
+      </DndContext>
     </div>
   );
 };

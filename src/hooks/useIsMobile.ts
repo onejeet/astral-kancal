@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 export function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
 
   const isTouchDevice =
     typeof window !== 'undefined' && typeof navigator !== 'undefined'

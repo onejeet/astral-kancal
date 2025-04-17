@@ -7,10 +7,12 @@ const DroppableDay = React.memo(function DroppableDay({
   children,
   date,
   isActive,
+  isKanbanView,
 }: {
   children: React.ReactNode;
   date: string;
-  isActive: boolean;
+  isActive?: boolean;
+  isKanbanView?: boolean;
 }) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const { setNodeRef, isOver } = useDroppable({ id: date });
@@ -67,9 +69,9 @@ const DroppableDay = React.memo(function DroppableDay({
       animate={animateConfig}
       transition={transitionConfig}
     >
-      {active?.id && !isSameSpot && (
+      {isOver && !isSameSpot && (
         <div
-          className={`inset-x-0 top-0 ${isMobile ? 'h-20' : 'h-80'} mb-10 bg-indigo-100/60 rounded-2xl  z-0`}
+          className={`inset-x-0 top-0 ${isMobile || isKanbanView ? 'h-20' : 'h-80'} mb-10 bg-indigo-100/60 rounded-2xl  z-0`}
         />
       )}
 

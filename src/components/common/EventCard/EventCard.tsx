@@ -6,7 +6,13 @@ import { motion } from 'framer-motion';
 import { EventCardProps } from './EventCard.types';
 import { useDraggable } from '@dnd-kit/core';
 
-const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, currentDate }) => {
+const EventCard: React.FC<EventCardProps> = ({
+  event,
+  isMinimal,
+  onClick,
+  disableLayoutId,
+  currentDate,
+}) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: event.id,
     data: {
@@ -28,6 +34,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
         : {
             transform: CSS.Transform.toString(transform),
             opacity: isDragging ? 0 : 1,
+            transition: 'all 0.2s ease',
             touchAction: isDragging ? 'none' : 'auto',
           },
     [isDragging, transform, disableLayoutId]
@@ -66,14 +73,14 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
       onClick={handleClick}
       style={style}
       data-draggable-event-card
-      className="no-touch-callout"
+      className="no-touch-callout relative"
     >
       <motion.div
-        className={`bg-white rounded-2xl shadow-sm cursor-pointer overflow-hidden group ${isDragging ? 'touch-none' : ''}`}
+        className={`bg-white relative ${isMinimal ? 'rounded-xl' : 'rounded-2xl'} shadow-sm cursor-pointer overflow-hidden group ${isDragging ? 'touch-none' : ''}`}
         layoutId={disableLayoutId ? undefined : `card-${event.id}`}
       >
         <motion.div
-          className="relative aspect-[14/5]"
+          className={`relative ${isMinimal ? 'aspect-[12/4]' : 'aspect-[14/5]'}`}
           layoutId={disableLayoutId ? undefined : `image-container-${event.id}`}
         >
           <motion.img
@@ -84,30 +91,35 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
           />
         </motion.div>
 
-        <motion.div className="p-4" layoutId={disableLayoutId ? undefined : `content-${event.id}`}>
+        <motion.div
+          className={isMinimal ? 'p-2.5' : 'p-4'}
+          layoutId={disableLayoutId ? undefined : `content-${event.id}`}
+        >
           <motion.div
-            className="flex justify-between items-center mb-2"
+            className={`flex justify-between items-center ${isMinimal ? '' : 'mb-2'}`}
             layoutId={disableLayoutId ? undefined : `header-${event.id}`}
           >
             <motion.h3
-              className="text-lg font-semibold text-gray-900"
+              className={`${isMinimal ? 'text-xs' : 'text-lg'} font-semibold text-gray-900`}
               layoutId={disableLayoutId ? undefined : `title-${event.id}`}
             >
               {event.title}
             </motion.h3>
             <motion.span
-              className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm font-medium"
+              className={`absolute ${isMinimal ? 'top-1 right-1 text-xs py:0.8 px-1.5' : ' top-2 right-2 text-lg py-1 px-3'}  bg-indigo-200 text-indigo-800 rounded-full text-sm font-medium`}
               layoutId={disableLayoutId ? undefined : `time-${event.id}`}
             >
               {event.time}
             </motion.span>
           </motion.div>
-          <motion.p
-            className="text-gray-600 text-sm line-clamp-2"
-            layoutId={disableLayoutId ? undefined : `description-${event.id}`}
-          >
-            {event.description}
-          </motion.p>
+          {!isMinimal && (
+            <motion.p
+              className="text-gray-600 text-sm line-clamp-2"
+              layoutId={disableLayoutId ? undefined : `description-${event.id}`}
+            >
+              {event.description}
+            </motion.p>
+          )}
         </motion.div>
       </motion.div>
     </div>
