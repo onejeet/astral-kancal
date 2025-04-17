@@ -46,7 +46,7 @@ const Card: React.FC<CardProps> = ({
             {event.title}
           </motion.h3>
           <motion.span
-            className={` ${isMinimal ? 'absolute top-1 right-1 text-xs py:0.8 px-1.5' : ' top-2 right-2 text-lg py-1 px-3'}  bg-indigo-200 text-indigo-800 rounded-full text-sm font-medium`}
+            className={` ${isMinimal ? ' absolute top-1 right-1 text-xs py:0.8 px-1.5' : 'text-lg py-1 px-3'}  bg-indigo-200 text-indigo-800 rounded-full text-sm font-medium`}
             layoutId={disableLayoutId ? undefined : `time-${event.id}`}
           >
             {event.time}
