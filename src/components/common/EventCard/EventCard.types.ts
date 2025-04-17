@@ -1,9 +1,15 @@
 import { Event } from '@/types';
 
-export interface EventCardProps {
-  event: Event;
+export interface EventCardProps extends CardProps {
   onClick?: () => void;
+  currentDate?: string;
+}
+
+export interface CardProps {
+  event: Event;
   disableLayoutId?: boolean;
-  currentDate: string;
   isMinimal?: boolean;
+  isDragging?: boolean;
+  onClose?: () => void;
+  fullView?: boolean;
 }
