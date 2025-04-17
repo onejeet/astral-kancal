@@ -81,7 +81,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
   > | null>(null);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const { isMobile } = useIsMobile();
+  const { isMobile, isTouchDevice } = useIsMobile();
 
   React.useEffect(() => {
     if (document?.documentElement || document?.body) {
@@ -285,7 +285,9 @@ const DayColumn: React.FC<DayColumnProps> = ({ selectedDate, setSelectedDate }) 
         <motion.div
           ref={containerRef}
           className="calendar-container max-w-2xl mx-auto px-4 py-6 overflow-hidden"
-          drag={isMobile && !draggedEvent && !isContainerDragging ? 'x' : undefined}
+          drag={
+            (isMobile || isTouchDevice) && !draggedEvent && !isContainerDragging ? 'x' : undefined
+          }
           dragConstraints={{ left: 0, right: 0 }}
           style={{
             pointerEvents: isContainerDragging ? 'none' : 'auto',
