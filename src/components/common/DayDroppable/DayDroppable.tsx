@@ -15,8 +15,10 @@ const DroppableDay = React.memo(function DroppableDay({
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const { setNodeRef, isOver } = useDroppable({ id: date });
   const { active } = useDndContext();
-  const isSameSpot = active?.data?.current?.sortable?.containerId === `Sortable-${date}`;
+  const isSameSpot = active?.id && active?.data?.current?.date === date;
   const isMobile = useIsMobile();
+
+  console.log('AA: DroppableDay', isActive, active, date);
 
   const backgroundStyle = useMemo(
     () => ({
@@ -65,7 +67,7 @@ const DroppableDay = React.memo(function DroppableDay({
       animate={animateConfig}
       transition={transitionConfig}
     >
-      {isActive && !isSameSpot && (
+      {active?.id && !isSameSpot && (
         <div
           className={`inset-x-0 top-0 ${isMobile ? 'h-20' : 'h-80'} mb-10 bg-indigo-100/60 rounded-2xl  z-0`}
         />

@@ -1,17 +1,17 @@
 'use client';
 
 import React from 'react';
-import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { EventCardProps } from './EventCard.types';
+import { useDraggable } from '@dnd-kit/core';
 
 const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, currentDate }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: event.id,
     data: {
       eventId: event.id,
-      containerId: `Sortable-${currentDate}`, // or `Sortable-${currentDate}` to match your context
+      date: currentDate,
     },
   });
 
@@ -27,11 +27,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, disableLayoutId, 
           }
         : {
             transform: CSS.Transform.toString(transform),
-            transition,
             opacity: isDragging ? 0 : 1,
             touchAction: isDragging ? 'none' : 'auto',
           },
-    [isDragging, transform, transition, disableLayoutId]
+    [isDragging, transform, disableLayoutId]
   );
 
   // Simple handlers for touch events
